@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 75675403}
   - component: {fileID: 75675404}
   m_Layer: 0
-  m_Name: GameManager
+  m_Name: ConnectionEventsHandler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1734,6 +1734,7 @@ MonoBehaviour:
     count: 3
   - unit: {fileID: 4401544970204832038, guid: 4616c8938ae33cb44ad069db29328013, type: 3}
     count: 2
+  intersectionCheckRadius: 0.25
   rightPlayerMinSpawnX: 5.7
   rightPlayerMaxSpawnX: 7.5
   minSpawnZ: -3

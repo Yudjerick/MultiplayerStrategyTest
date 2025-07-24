@@ -2,7 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random; 
 
-public class GameManager : NetworkBehaviour
+public class ConnectionEventsHandler : NetworkBehaviour
 {
     [SerializeField] LevelGenerator levelGenerator;
     [SerializeField] UnitSpawner unitSpawner;

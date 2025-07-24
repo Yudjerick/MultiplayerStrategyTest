@@ -8,6 +8,7 @@ using Random = UnityEngine.Random;
 public class UnitSpawner : MonoBehaviour
 {
     [SerializeField] private List<UnitSpawnSetting> unitSpawnSettings;
+    [SerializeField] private float intersectionCheckRadius;
     [Header("Spawning zone")]
     [SerializeField] private float rightPlayerMinSpawnX;
     [SerializeField] private float rightPlayerMaxSpawnX;
@@ -33,7 +34,12 @@ public class UnitSpawner : MonoBehaviour
         {
             for (int i = 0; i < setting.count; i++)
             {
+                
                 Vector3 spawnPosition = new Vector3(Random.Range(minX, maxX), spawnY, Random.Range(minSpawnZ, maxSpawnZ));
+                while (Physics.OverlapSphere(spawnPosition, intersectionCheckRadius).Length > 0)
+                {
+                    spawnPosition = new Vector3(Random.Range(minX, maxX), spawnY, Random.Range(minSpawnZ, maxSpawnZ));
+                }
                 Quaternion spawnRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
                 var instance = Instantiate(setting.unit, spawnPosition, spawnRotation);
                 instance.OwnerId.Value = playerId;
