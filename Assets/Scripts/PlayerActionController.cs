@@ -79,6 +79,7 @@ public class PlayerActionController : NetworkBehaviour
         pathVisualizer.ErasePathes();
         attackRangeVizualizer.EraseRange();
         _selectedUnit?.SetSelected(false);
+        _selectedUnit = null;
         _readyToAttack = false;
         _readyToMove = false;
         _recievePlayerInput = CurrentPlayerId.Value == NetworkManager.LocalClientId;
