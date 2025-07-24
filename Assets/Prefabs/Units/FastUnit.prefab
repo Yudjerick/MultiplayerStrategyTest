@@ -123,7 +123,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.25
-  m_Speed: 4
+  m_Speed: 1
   m_Acceleration: 100
   avoidancePriority: 50
   m_AngularSpeed: 700
@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1163314782
+  GlobalObjectIdHash: 1821749138
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -184,7 +184,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcdacb5e13f641646a90e35bfb510b8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  <OwnerId>k__BackingField: 0
   highlightController: {fileID: 945341069316087342}
   moveFinishedTolerance: 0.01
   <Speed>k__BackingField: 7
@@ -203,6 +202,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 795aab14926ff4542b469b86669e7a20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  selectedIndicator: {fileID: 6047033106427500823, guid: b1ab2299b6f61d748a616bf5edf47df6,
+    type: 3}
+  attackIndicator: {fileID: 6047033106427500823, guid: 966357d06a2384a4eafab4fb06bbabd9,
+    type: 3}
 --- !u!114 &-7618823415143819731
 MonoBehaviour:
   m_ObjectHideFlags: 0

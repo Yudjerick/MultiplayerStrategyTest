@@ -1588,10 +1588,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxTurnDuration: 60
-  selectedUnit: {fileID: 0}
-  readyToMove: 0
-  readyToAttack: 0
-  validAttackTargets: []
   pathVisualizer: {fileID: 1591146100}
   attackRangeVizualizer: {fileID: 1591146099}
   moveConfirmClickAcceptanceRadius: 0.1
@@ -1673,7 +1669,7 @@ GameObject:
   - component: {fileID: 1665809282}
   - component: {fileID: 1665809284}
   m_Layer: 0
-  m_Name: LevelGenerator
+  m_Name: LevelSetup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1743,6 +1739,8 @@ MonoBehaviour:
   minSpawnZ: -3
   maxSpawnZ: 3
   spawnY: 0.67
+  rightPlayerColor: {r: 1, g: 0.35684925, b: 0, a: 0}
+  leftPlayerColor: {r: 0.020754695, g: 0.021963837, b: 1, a: 0}
 --- !u!1 &1734009866
 GameObject:
   m_ObjectHideFlags: 0

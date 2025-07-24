@@ -5,15 +5,21 @@ using UnityEngine;
 
 public class HighlightController : NetworkBehaviour
 {
+    [SerializeField] private GameObject selectedIndicator;
+    [SerializeField] private GameObject attackIndicator;
+    private GameObject _currentIndicator;
     public void SetSelectionHighlight(bool value)
     {
         if(value)
         {
-            GetComponent<MeshRenderer>().material.color = Color.green;
+            _currentIndicator = Instantiate(selectedIndicator, transform);
         }
         else
         {
-            GetComponent<MeshRenderer>().material.color = Color.white;
+            if(_currentIndicator is not null)
+            {
+                Destroy(_currentIndicator);
+            }
         }
     }
 
@@ -21,16 +27,14 @@ public class HighlightController : NetworkBehaviour
     {
         if (value)
         {
-            GetComponent<MeshRenderer>().material.color = Color.red;
+            _currentIndicator = Instantiate(attackIndicator, transform);
         }
         else
         {
-            var mr = GetComponent<MeshRenderer>();
-            if(mr != null)
+            if (_currentIndicator is not null)
             {
-                mr.material.color = Color.white;
+                Destroy(_currentIndicator);
             }
-            
         }
     }
 }

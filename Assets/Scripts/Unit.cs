@@ -10,6 +10,8 @@ public class Unit : NetworkBehaviour, IPointerClickHandler
 {
     public NetworkVariable<ulong> OwnerId { get; set; } = new NetworkVariable<ulong>();
 
+    public NetworkVariable<Color> Color { get; set; } = new NetworkVariable<Color>();
+
     [SerializeField] private HighlightController highlightController;
     [SerializeField] private float moveFinishedTolerance;
     [field: SerializeField] public float Speed { get; private set; }
@@ -26,6 +28,7 @@ public class Unit : NetworkBehaviour, IPointerClickHandler
         obstacle = GetComponent<NavMeshObstacle>();
         obstacle.enabled = true;
         agent.enabled = false;
+        GetComponent<MeshRenderer>().material.color = Color.Value;
     }
 
     public IEnumerator MoveTo(Vector3 target, Action onComplete)

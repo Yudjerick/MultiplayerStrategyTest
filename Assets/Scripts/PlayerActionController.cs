@@ -12,23 +12,19 @@ public class PlayerActionController : NetworkBehaviour
     public NetworkVariable<int> MovementRemaining { get; private set; } = new NetworkVariable<int>();
     public NetworkVariable<int> AttackRemaining { get; private set; } = new NetworkVariable<int>();
     public NetworkVariable<int> Timer { get; private set; } = new NetworkVariable<int>();
-
     public NetworkVariable<int> TurnCount { get; private set; } = new NetworkVariable<int>();
 
     [SerializeField] private int maxTurnDuration;
-    [SerializeField] private Unit selectedUnit;
-    [SerializeField] private bool readyToMove;
-    [SerializeField] private bool readyToAttack;
-    [SerializeField] private List<Unit> validAttackTargets;
-
-
     [SerializeField] private PathVisualizer pathVisualizer;
     [SerializeField] private AttackRangeVizualizer attackRangeVizualizer;
-
     [SerializeField] private float moveConfirmClickAcceptanceRadius;
-    private Vector3 moveTargetPosition;
-    
-    private bool recievePlayerInput = true;
+
+    private Vector3 _moveTargetPosition;
+    private bool _recievePlayerInput = true;
+    private Unit _selectedUnit;
+    private bool _readyToMove;
+    private bool _readyToAttack;
+    private List<Unit> _validAttackTargets = new List<Unit>();
 
     public override void OnNetworkSpawn()
     {
@@ -79,55 +75,46 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HandleNewTurn()
     {
+        UnhighlightTargets();
         pathVisualizer.ErasePathes();
         attackRangeVizualizer.EraseRange();
-        selectedUnit?.SetSelected(false);
-        readyToAttack = false;
-        readyToMove = false;
-        recievePlayerInput = CurrentPlayerId.Value == NetworkManager.LocalClientId;
-
+        _selectedUnit?.SetSelected(false);
+        _readyToAttack = false;
+        _readyToMove = false;
+        _recievePlayerInput = CurrentPlayerId.Value == NetworkManager.LocalClientId;
     }
-
-    private void EndTurnIfOutOfActions()
-    {
-        if(MovementRemaining.Value == 0 && AttackRemaining.Value == 0)
-        {
-            NextTurnServerRpc();
-        }
-    }
-
     public void GroundClickedWithMoveButton(Vector3 point)
     {
-        if(!recievePlayerInput || selectedUnit is null)
+        if(!_recievePlayerInput || _selectedUnit is null)
         {
             return;
         }
-        if (!readyToMove)
+        if (!_readyToMove)
         {
-            BuildPath(selectedUnit, point);
+            BuildPath(_selectedUnit, point);
         }
         else
         {
-            if (Vector3.Distance(point, moveTargetPosition) < moveConfirmClickAcceptanceRadius)
+            if (Vector3.Distance(point, _moveTargetPosition) < moveConfirmClickAcceptanceRadius)
             {
-                TryMoveServerRpc(selectedUnit.NetworkObject, moveTargetPosition);
+                TryMoveServerRpc(_selectedUnit.NetworkObject, _moveTargetPosition);
             }
             else
             {
-                BuildPath(selectedUnit, point);
+                BuildPath(_selectedUnit, point);
             }
         }
     }
 
     public void GroundClickedWithCancelButton(Vector3 point)
     {
-        if (!recievePlayerInput)
+        if (!_recievePlayerInput)
         {
             return;
         }
-        if(selectedUnit is not null)
+        if(_selectedUnit is not null)
         {
-            GetReadyToAtack();
+            GetReadyToAtack(_selectedUnit.transform.position);
         }
     }
 
@@ -138,12 +125,12 @@ public class PlayerActionController : NetworkBehaviour
             
             Pathfinder pathfinder = new Pathfinder();
             bool isPathValid = pathfinder.TryCalculatePath(unit.transform.position, point,
-                selectedUnit.Speed, out List<Vector3> path);
+                _selectedUnit.Speed, out List<Vector3> path);
             if (isPathValid)
             {
-                readyToAttack = false;
-                readyToMove = true;
-                moveTargetPosition = hit.position;
+                _readyToAttack = false;
+                _readyToMove = true;
+                _moveTargetPosition = hit.position;
                 pathVisualizer.DrawValidPath(path);
                 attackRangeVizualizer.DrawRange(point, unit.AttackRange);
                 UpdateValidTargets(new Vector3(point.x, unit.transform.position.y, point.z));
@@ -155,7 +142,7 @@ public class PlayerActionController : NetworkBehaviour
 
     public void UnitClickedWithSelectButton(Unit unit)
     {
-        if (!recievePlayerInput || selectedUnit == unit)
+        if (!_recievePlayerInput || _selectedUnit == unit)
         {
             return;
         }
@@ -169,18 +156,18 @@ public class PlayerActionController : NetworkBehaviour
     {
         if(unit.OwnerId.Value != CurrentPlayerId.Value)
         {
-            if (AttackRemaining.Value > 0 && readyToAttack && validAttackTargets.Contains(unit))
+            if (AttackRemaining.Value > 0 && _readyToAttack && _validAttackTargets.Contains(unit))
             {
-                TryAttackServerRpc(selectedUnit.NetworkObject, unit.NetworkObject);
+                TryAttackServerRpc(_selectedUnit.NetworkObject, unit.NetworkObject);
             }
         }
     }
 
     private void Select(Unit unit)
     {
-        selectedUnit?.SetSelected(false);
-        selectedUnit = unit;
-        GetReadyToAtack();
+        _selectedUnit?.SetSelected(false);
+        _selectedUnit = unit;
+        GetReadyToAtack(unit.transform.position);
         unit.SetSelected(true);
     }
 
@@ -191,16 +178,6 @@ public class PlayerActionController : NetworkBehaviour
         {
             target.Despawn(true);
             AttackRemaining.Value--;
-            /*Unit unit = target.GetComponent<Unit>();
-            if(unit.OwnerId.Value == CurrentPlayerId.Value)
-            {
-                UpdateValidTargets(attacker.transform.position);
-                if (validAttackTargets.Contains(unit))
-                {
-                    target.Despawn();
-                    AttackRemaining.Value--;
-                }
-            }*/
         }    
     }
 
@@ -213,42 +190,33 @@ public class PlayerActionController : NetworkBehaviour
             Select(unit);
             OnMoveStartClientRpc();
             unit.StartCoroutine(unit.MoveTo(point, () => {
-                OnMoveCompleteClientRpc();
+                OnMoveCompleteClientRpc(unit.transform.position);
             }));
             MovementRemaining.Value--;
-            /*Unit unit = unitObj.GetComponent<Unit>();
-            if(unit.OwnerId.Value == CurrentPlayerId.Value && BuildPath(unit.GetComponent<Unit>(), point))
-            {
-                OnMoveStartClientRpc();
-                selectedUnit.StartCoroutine(selectedUnit.MoveTo(point, () => {
-                    OnMoveCompleteClientRpc();
-                }));
-                MovementRemaining.Value--;
-            }*/
         }
     }
 
     [Rpc(SendTo.ClientsAndHost)]
     private void OnMoveStartClientRpc()
     {
-        recievePlayerInput = false;
+        _recievePlayerInput = false;
         pathVisualizer.ErasePathes();
         attackRangeVizualizer.EraseRange();
         UnhighlightTargets();
     }
 
     [Rpc(SendTo.ClientsAndHost)]
-    private void OnMoveCompleteClientRpc()
+    private void OnMoveCompleteClientRpc(Vector3 attackerPosition)
     {
-        recievePlayerInput = true;
-        GetReadyToAtack();
+        _recievePlayerInput = true;
+        GetReadyToAtack(attackerPosition);
     }
 
     private void UpdateValidTargets(Vector3 attackingUnitPosition)
     {
         UnhighlightTargets();
-        validAttackTargets.Clear();
-        var unitsCollidersInRange = Physics.OverlapSphere(attackingUnitPosition, selectedUnit.AttackRange).Where(col => col.CompareTag("Unit"));
+        _validAttackTargets.Clear();
+        var unitsCollidersInRange = Physics.OverlapSphere(attackingUnitPosition, _selectedUnit.AttackRange).Where(col => col.CompareTag("Unit"));
         List<Collider> uncoveredColliders = new List<Collider>();
         foreach (var collider in unitsCollidersInRange)
         {
@@ -258,7 +226,7 @@ public class PlayerActionController : NetworkBehaviour
                 uncoveredColliders.Add(collider);
             }
         }
-        validAttackTargets = uncoveredColliders
+        _validAttackTargets = uncoveredColliders
             .Select(col => col.GetComponent<Unit>())
             .Where(unit => unit.OwnerId.Value != CurrentPlayerId.Value)
             .ToList();
@@ -267,7 +235,7 @@ public class PlayerActionController : NetworkBehaviour
 
     private void UnhighlightTargets()
     {
-        foreach (var unit in validAttackTargets)
+        foreach (var unit in _validAttackTargets)
         {
             unit?.SetAsAttackTarget(false);
         }
@@ -275,22 +243,22 @@ public class PlayerActionController : NetworkBehaviour
 
     private void HighlightValidTargets()
     {
-        foreach (var unit in validAttackTargets)
+        foreach (var unit in _validAttackTargets)
         {
             unit.SetAsAttackTarget(true);
         }
     }
 
-    private void GetReadyToAtack()
+    private void GetReadyToAtack(Vector3 attakerPosition)
     {
-        if(selectedUnit == null)
+        if(_selectedUnit == null)
         {
             return;
         }
         pathVisualizer.ErasePathes();
-        readyToMove = false;
-        readyToAttack = true;
-        UpdateValidTargets(selectedUnit.transform.position);
-        attackRangeVizualizer.DrawRange(selectedUnit.transform.position, selectedUnit.AttackRange);
+        _readyToMove = false;
+        _readyToAttack = true;
+        UpdateValidTargets(attakerPosition);
+        attackRangeVizualizer.DrawRange(attakerPosition, _selectedUnit.AttackRange);
     }
 }
